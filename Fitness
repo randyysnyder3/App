@@ -29,3 +29,19 @@ export default function App() {
     </NavigationContainer>
   );
 }
+// HomeScreen.js
+import React from 'react';
+import { View, Button } from 'react-native';
+
+const HomeScreen = ({ navigation }) => {
+  return (
+    <View>
+      <Button
+        title="Start Exercise"
+        onPress={() => navigation.navigate('Exercise')}
+      />
+    </View>
+  );
+};
+
+export default HomeScreen;
