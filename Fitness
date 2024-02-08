@@ -45,3 +45,37 @@ const HomeScreen = ({ navigation }) => {
 };
 
 export default HomeScreen;
+
+// ExerciseScreen.js
+import React, { useState } from 'react';
+import { View, Text, Button } from 'react-native';
+import firebase from 'firebase/app';
+import 'firebase/firestore';
+
+const ExerciseScreen = () => {
+  const [exerciseCount, setExerciseCount] = useState(0);
+
+  const incrementExerciseCount = async () => {
+    // Update the exercise count in Firebase
+    const userUid = firebase.auth().currentUser.uid;
+    const userRef = firebase.firestore().collection('users').doc(userUid);
+    
+    try {
+      await userRef.update({
+        exerciseCount: firebase.firestore.FieldValue.increment(1),
+      });
+      setExerciseCount(exerciseCount + 1);
+    } catch (error) {
+      console.error('Error updating exercise count: ', error);
+    }
+  };
+
+  return (
+    <View>
+      <Text>Exercise Count: {exerciseCount}</Text>
+      <Button title="Increment" onPress={incrementExerciseCount} />
+    </View>
+  );
+};
+
+export default ExerciseScreen;
