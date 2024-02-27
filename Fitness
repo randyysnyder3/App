@@ -1,69 +1,95 @@
-expo init FitnessTracker
-cd FitnessTracker
-npm install @react-navigation/native @react-navigation/stack react-native-reanimated react-native-gesture-handler react-native-screens react-native-safe-area-context @react-native-community/viewpager firebase
-// firebaseConfig.js
-export default {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_AUTH_DOMAIN",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_STORAGE_BUCKET",
-  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-  appId: "YOUR_APP_ID",
-};
+npm install @react-navigation/bottom-tabs @react-native-community/datetimepicker @react-native-firebase/app @react-native-firebase/auth @react-native-firebase/firestore
 // App.js
-import React from 'react';
+import React, { useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import firebase from '@react-native-firebase/app';
+import { getAuth, onAuthStateChanged } from '@react-native-firebase/auth';
+
 import HomeScreen from './screens/HomeScreen';
 import ExerciseScreen from './screens/ExerciseScreen';
+import HistoryScreen from './screens/HistoryScreen';
+import ProfileScreen from './screens/ProfileScreen';
 
 const Stack = createStackNavigator();
+const Tab = createBottomTabNavigator();
 
-export default function App() {
+const App = () => {
+  useEffect(() => {
+    const firebaseConfig = {
+      // Your Firebase Config
+    };
+
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+    }
+
+    const auth = getAuth();
+    onAuthStateChanged(auth, (user) => {
+      // You can handle user authentication state changes here
+    });
+  }, []);
+
   return (
     <NavigationContainer>
-      <Stack.Navigator initialRouteName="Home">
-        <Stack.Screen name="Home" component={HomeScreen} />
-        <Stack.Screen name="Exercise" component={ExerciseScreen} />
-      </Stack.Navigator>
+      <Tab.Navigator>
+        <Tab.Screen name="Home" component={HomeStack} />
+        <Tab.Screen name="History" component={HistoryStack} />
+        <Tab.Screen name="Profile" component={ProfileStack} />
+      </Tab.Navigator>
     </NavigationContainer>
-  );
-}
-// HomeScreen.js
-import React from 'react';
-import { View, Button } from 'react-native';
-
-const HomeScreen = ({ navigation }) => {
-  return (
-    <View>
-      <Button
-        title="Start Exercise"
-        onPress={() => navigation.navigate('Exercise')}
-      />
-    </View>
   );
 };
 
-export default HomeScreen;
+const HomeStack = () => {
+  return (
+    <Stack.Navigator initialRouteName="Home">
+      <Stack.Screen name="Home" component={HomeScreen} />
+      <Stack.Screen name="Exercise" component={ExerciseScreen} />
+    </Stack.Navigator>
+  );
+};
 
+const HistoryStack = () => {
+  return (
+    <Stack.Navigator initialRouteName="History">
+      <Stack.Screen name="History" component={HistoryScreen} />
+    </Stack.Navigator>
+  );
+};
+
+const ProfileStack = () => {
+  return (
+    <Stack.Navigator initialRouteName="Profile">
+      <Stack.Screen name="Profile" component={ProfileScreen} />
+    </Stack.Navigator>
+  );
+};
+
+export default App;
 // ExerciseScreen.js
 import React, { useState } from 'react';
 import { View, Text, Button } from 'react-native';
-import firebase from 'firebase/app';
-import 'firebase/firestore';
+import { useNavigation } from '@react-navigation/native';
+import { getAuth, currentUser } from '@react-native-firebase/auth';
+import { addDoc, collection } from '@react-native-firebase/firestore';
 
 const ExerciseScreen = () => {
   const [exerciseCount, setExerciseCount] = useState(0);
+  const navigation = useNavigation();
 
   const incrementExerciseCount = async () => {
-    // Update the exercise count in Firebase
-    const userUid = firebase.auth().currentUser.uid;
-    const userRef = firebase.firestore().collection('users').doc(userUid);
-    
+    const auth = getAuth();
+    const user = currentUser(auth);
+
     try {
-      await userRef.update({
-        exerciseCount: firebase.firestore.FieldValue.increment(1),
+      // Update the exercise count in Firebase
+      await addDoc(collection('exerciseLogs', user.uid), {
+        timestamp: new Date(),
+        exerciseCount: exerciseCount + 1,
       });
+      
       setExerciseCount(exerciseCount + 1);
     } catch (error) {
       console.error('Error updating exercise count: ', error);
@@ -74,6 +100,10 @@ const ExerciseScreen = () => {
     <View>
       <Text>Exercise Count: {exerciseCount}</Text>
       <Button title="Increment" onPress={incrementExerciseCount} />
+      <Button
+        title="View History"
+        onPress={() => navigation.navigate('History')}
+      />
     </View>
   );
 };
