@@ -1,0 +1,76 @@
+npx react-native init FitnessTracker
+cd FitnessTracker
+npm install @react-navigation/native @react-navigation/stack @react-navigation/bottom-tabs @react-native-firebase/app @react-native-firebase/auth @react-native-firebase/firestore
+cd ios
+pod install
+cd ..
+// App.js
+import React, { useEffect } from 'react';
+import { NavigationContainer } from '@react-navigation/native';
+import { createStackNavigator } from '@react-navigation/stack';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import firebase from '@react-native-firebase/app';
+import { getAuth, onAuthStateChanged } from '@react-native-firebase/auth';
+
+import HomeScreen from './screens/HomeScreen';
+import ExerciseScreen from './screens/ExerciseScreen';
+import HistoryScreen from './screens/HistoryScreen';
+import ProfileScreen from './screens/ProfileScreen';
+
+const Stack = createStackNavigator();
+const Tab = createBottomTabNavigator();
+
+const App = () => {
+  useEffect(() => {
+    const firebaseConfig = {
+      // Your Firebase Config
+    };
+
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+    }
+
+    const auth = getAuth();
+    onAuthStateChanged(auth, (user) => {
+      // You can handle user authentication state changes here
+    });
+  }, []);
+
+  return (
+    <NavigationContainer>
+      <Tab.Navigator>
+        <Tab.Screen name="Home" component={HomeStack} />
+        <Tab.Screen name="History" component={HistoryStack} />
+        <Tab.Screen name="Profile" component={ProfileStack} />
+      </Tab.Navigator>
+    </NavigationContainer>
+  );
+};
+
+const HomeStack = () => {
+  return (
+    <Stack.Navigator initialRouteName="Home">
+      <Stack.Screen name="Home" component={HomeScreen} />
+      <Stack.Screen name="Exercise" component={ExerciseScreen} />
+    </Stack.Navigator>
+  );
+};
+
+const HistoryStack = () => {
+  return (
+    <Stack.Navigator initialRouteName="History">
+      <Stack.Screen name="History" component={HistoryScreen} />
+    </Stack.Navigator>
+  );
+};
+
+const ProfileStack = () => {
+  return (
+    <Stack.Navigator initialRouteName="Profile">
+      <Stack.Screen name="Profile" component={ProfileScreen} />
+    </Stack.Navigator>
+  );
+};
+
+export default App;
+npx react-native run-ios
